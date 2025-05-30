@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">体重记录器</string>
+    
+    <!-- 底部导航 -->
+    <string name="nav_weight_entry">记录体重</string>
+    <string name="nav_weight_history">历史记录</string>
+    <string name="nav_chart">体重趋势</string>
+    <string name="nav_settings">设置</string>
+    
+    <!-- 体重记录页面 -->
+    <string name="weight_entry_title">今日体重</string>
+    <string name="weight_hint">请输入体重 (kg)</string>
+    <string name="save_weight">保存</string>
+    <string name="update_weight">更新</string>
+    <string name="weight_saved">体重已保存</string>
+    <string name="weight_updated">体重已更新</string>
+    <string name="invalid_weight">请输入有效的体重</string>
+    <string name="today_weight">今日体重: %1$.1f kg</string>
+    <string name="no_weight_today">今日还未记录体重</string>
+    
+    <!-- 历史记录页面 -->
+    <string name="history_title">历史记录</string>
+    <string name="delete_weight">删除</string>
+    <string name="edit_weight">编辑</string>
+    <string name="no_data">暂无数据</string>
+    <string name="confirm_delete">确认删除这条记录吗？</string>
+    <string name="yes">是</string>
+    <string name="no">否</string>
+    
+    <!-- 图表页面 -->
+    <string name="chart_title">体重趋势图</string>
+    <string name="weight_kg">体重 (kg)</string>
+    <string name="date">日期</string>
+    <string name="time_range_7days">7天</string>
+    <string name="time_range_30days">30天</string>
+    <string name="time_range_90days">90天</string>
+    <string name="time_range_all">全部</string>
+    
+    <!-- 设置页面 -->
+    <string name="settings_title">设置</string>
+    <string name="reminder_settings">提醒设置</string>
+    <string name="enable_reminder">启用每日提醒</string>
+    <string name="reminder_time">提醒时间</string>
+    <string name="reminder_time_desc">选择每日提醒的时间</string>
+    <string name="about">关于应用</string>
+    <string name="app_version">版本 1.0</string>
+    
+    <!-- 通知 -->
+    <string name="notification_channel_name">体重提醒</string>
+    <string name="notification_channel_desc">每日体重记录提醒</string>
+    <string name="notification_title">记录体重</string>
+    <string name="notification_text">别忘了记录今天的体重哦！</string>
+    
+    <!-- 编辑对话框 -->
+    <string name="edit_weight_title">编辑体重</string>
+    <string name="cancel">取消</string>
+    <string name="save">保存</string>
+    
+    <!-- 错误消息 -->
+    <string name="error_saving">保存失败，请重试</string>
+    <string name="error_loading">加载失败，请重试</string>
+</resources> 

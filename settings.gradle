@@ -1,0 +1,21 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+}
+
+dependencyResolutionManagement {
+    // 采用 settings 中的仓库配置，禁止项目级别重复声明
+    repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
+    repositories {
+        google()
+        mavenCentral()
+        // 如果需要 jitpack 或其他私服，可在这里补充：
+        maven { url "https://jitpack.io" }
+    }
+}
+
+rootProject.name = "Weight Tracker"
+include ':app'
