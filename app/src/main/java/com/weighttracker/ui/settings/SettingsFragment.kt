@@ -23,6 +23,7 @@ import com.weighttracker.notification.NotificationReceiver
 import com.weighttracker.notification.NotificationScheduler
 import com.weighttracker.util.PreferenceManager
 import com.weighttracker.util.BatteryOptimizationHelper
+import com.weighttracker.util.AutoStartHelper
 import java.util.Locale
 
 class SettingsFragment : Fragment() {
@@ -37,8 +38,8 @@ class SettingsFragment : Fragment() {
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            // 通知权限被授予，检查电池优化设置
-            checkBatteryOptimizationAndEnableReminder()
+            // 通知权限被授予，检查其他优化设置
+            checkAllOptimizationsAndEnableReminder()
         } else {
             // 权限被拒绝，显示说明并重置开关
             showPermissionDeniedDialog()
@@ -50,9 +51,10 @@ class SettingsFragment : Fragment() {
     private val appSettingsLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { 
-        // 从设置页面返回后检查权限状态
+        // 从设置页面返回后刷新状态
+        updateOptimizationStatus()
         if (checkNotificationPermission()) {
-            checkBatteryOptimizationAndEnableReminder()
+            checkAllOptimizationsAndEnableReminder()
         } else {
             binding.switchReminder.isChecked = false
             Toast.makeText(requireContext(), "需要通知权限才能启用提醒功能", Toast.LENGTH_SHORT).show()
@@ -75,6 +77,7 @@ class SettingsFragment : Fragment() {
         
         setupViews()
         setupClickListeners()
+        updateOptimizationStatus()
     }
 
     private fun setupViews() {
@@ -83,6 +86,9 @@ class SettingsFragment : Fragment() {
         
         // 显示当前提醒时间
         updateTimeDisplay()
+        
+        // 设置优化卡片的可见性
+        updateOptimizationCardVisibility()
     }
 
     private fun setupClickListeners() {
@@ -110,6 +116,114 @@ class SettingsFragment : Fragment() {
                 false
             }
         }
+
+        // 通知优化功能点击事件
+        binding.layoutNotificationPermission.setOnClickListener {
+            if (!checkNotificationPermission()) {
+                requestNotificationPermissionIfNeeded()
+            } else {
+                openAppNotificationSettings()
+            }
+        }
+
+        binding.layoutBatteryOptimization.setOnClickListener {
+            BatteryOptimizationHelper.requestIgnoreBatteryOptimizations(this)
+        }
+
+        binding.layoutAutoStart.setOnClickListener {
+            if (AutoStartHelper.isAutoStartRequired()) {
+                AutoStartHelper.showAutoStartGuide(this)
+                AutoStartHelper.saveAutoStartGuideShown(requireContext())
+            } else {
+                Toast.makeText(requireContext(), "您的设备不需要额外的自启动设置", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        binding.layoutTestNotification.setOnClickListener {
+            testNotification()
+        }
+    }
+
+    /**
+     * 更新优化卡片的可见性
+     */
+    private fun updateOptimizationCardVisibility() {
+        // 当提醒功能开启时显示优化卡片
+        binding.cardNotificationOptimization.visibility = 
+            if (preferenceManager.isReminderEnabled) View.VISIBLE else View.GONE
+    }
+
+    /**
+     * 更新所有优化功能的状态显示
+     */
+    private fun updateOptimizationStatus() {
+        updateNotificationPermissionStatus()
+        updateBatteryOptimizationStatus()
+        updateAutoStartStatus()
+    }
+
+    /**
+     * 更新通知权限状态
+     */
+    private fun updateNotificationPermissionStatus() {
+        val hasPermission = checkNotificationPermission()
+        
+        if (hasPermission) {
+            binding.ivNotificationStatus.setImageResource(R.drawable.ic_check_circle)
+            binding.ivNotificationStatus.setColorFilter(ContextCompat.getColor(requireContext(), R.color.chart_line))
+            binding.tvNotificationStatus.text = "已开启"
+            binding.tvNotificationStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.chart_line))
+        } else {
+            binding.ivNotificationStatus.setImageResource(R.drawable.ic_warning)
+            binding.ivNotificationStatus.setColorFilter(ContextCompat.getColor(requireContext(), R.color.error_red))
+            binding.tvNotificationStatus.text = "需要开启"
+            binding.tvNotificationStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.error_red))
+        }
+    }
+
+    /**
+     * 更新电池优化状态
+     */
+    private fun updateBatteryOptimizationStatus() {
+        val isOptimized = !BatteryOptimizationHelper.isIgnoringBatteryOptimizations(requireContext())
+        
+        if (!isOptimized) {
+            binding.ivBatteryStatus.setImageResource(R.drawable.ic_check_circle)
+            binding.ivBatteryStatus.setColorFilter(ContextCompat.getColor(requireContext(), R.color.chart_line))
+            binding.tvBatteryStatus.text = "已关闭电池优化"
+            binding.tvBatteryStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.chart_line))
+        } else {
+            binding.ivBatteryStatus.setImageResource(R.drawable.ic_battery)
+            binding.ivBatteryStatus.setColorFilter(ContextCompat.getColor(requireContext(), R.color.accent_orange))
+            binding.tvBatteryStatus.text = "建议关闭电池优化"
+            binding.tvBatteryStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.accent_orange))
+        }
+    }
+
+    /**
+     * 更新自启动状态
+     */
+    private fun updateAutoStartStatus() {
+        if (AutoStartHelper.isAutoStartRequired()) {
+            val hasShownGuide = !AutoStartHelper.shouldShowAutoStartGuide(requireContext())
+            
+            if (hasShownGuide) {
+                binding.ivAutoStartStatus.setImageResource(R.drawable.ic_check_circle)
+                binding.ivAutoStartStatus.setColorFilter(ContextCompat.getColor(requireContext(), R.color.chart_line))
+                binding.tvAutoStartStatus.text = "已引导设置"
+                binding.tvAutoStartStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.chart_line))
+            } else {
+                binding.ivAutoStartStatus.setImageResource(R.drawable.ic_restart)
+                binding.ivAutoStartStatus.setColorFilter(ContextCompat.getColor(requireContext(), R.color.primary_blue))
+                binding.tvAutoStartStatus.text = "建议开启自启动权限"
+                binding.tvAutoStartStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.primary_blue))
+            }
+        } else {
+            binding.ivAutoStartStatus.setImageResource(R.drawable.ic_check_circle)
+            binding.ivAutoStartStatus.setColorFilter(ContextCompat.getColor(requireContext(), R.color.chart_line))
+            binding.tvAutoStartStatus.text = "无需额外设置"
+            binding.tvAutoStartStatus.setTextColor(ContextCompat.getColor(requireContext(), R.color.chart_line))
+        }
     }
 
     /**
@@ -129,66 +243,42 @@ class SettingsFragment : Fragment() {
     }
 
     /**
-     * 检查电池优化并启用提醒
+     * 检查所有优化并启用提醒
      */
-    private fun checkBatteryOptimizationAndEnableReminder() {
-        if (BatteryOptimizationHelper.shouldShowBatteryOptimizationDialog(requireContext())) {
-            // 显示电池优化建议对话框
-            showBatteryOptimizationRecommendation()
-        } else {
-            // 直接启用提醒
-            enableReminder()
+    private fun checkAllOptimizationsAndEnableReminder() {
+        enableReminder()
+        
+        // 检查是否需要显示优化建议
+        val needsBatteryOptimization = BatteryOptimizationHelper.shouldShowBatteryOptimizationDialog(requireContext())
+        val needsAutoStartGuide = AutoStartHelper.shouldShowAutoStartGuide(requireContext())
+        
+        if (needsBatteryOptimization || needsAutoStartGuide) {
+            showOptimizationRecommendations(needsBatteryOptimization, needsAutoStartGuide)
         }
     }
 
     /**
-     * 显示电池优化建议
+     * 显示优化建议
      */
-    private fun showBatteryOptimizationRecommendation() {
-        val manufacturerGuide = BatteryOptimizationHelper.getManufacturerSpecificGuide()
+    private fun showOptimizationRecommendations(needsBattery: Boolean, needsAutoStart: Boolean) {
+        val recommendations = buildString {
+            append("提醒已启用！为了确保通知的可靠性，建议完成以下设置：\n\n")
+            
+            if (needsBattery) {
+                append("🔋 关闭电池优化\n")
+            }
+            
+            if (needsAutoStart) {
+                append("🔄 开启自启动权限 (${AutoStartHelper.getManufacturerName()})\n")
+            }
+            
+            append("\n您可以在下方的「通知优化设置」中完成这些配置。")
+        }
         
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("优化通知设置")
-            .setMessage("为了确保定时提醒正常工作，建议进行以下设置：\n\n1. 允许通知权限 ✓\n2. 关闭电池优化\n3. 允许后台运行\n\n厂商特定设置：\n$manufacturerGuide")
-            .setPositiveButton("去设置") { _, _ ->
-                BatteryOptimizationHelper.requestIgnoreBatteryOptimizations(this)
-                enableReminder()
-            }
-            .setNegativeButton("直接启用") { _, _ ->
-                enableReminder()
-            }
-            .setNeutralButton("了解更多") { _, _ ->
-                showDetailedOptimizationGuide()
-            }
-            .show()
-    }
-
-    /**
-     * 显示详细的优化指南
-     */
-    private fun showDetailedOptimizationGuide() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("为什么需要这些设置？")
-            .setMessage("""
-                🔋 电池优化：
-                系统可能会限制应用在后台运行，导致通知无法准时发送
-                
-                📱 厂商系统：
-                不同厂商的Android系统有额外的后台限制策略
-                
-                ⏰ WorkManager：
-                本应用使用Google推荐的WorkManager技术，但仍可能被某些激进的电池管理策略影响
-                
-                ✅ 解决方案：
-                将应用加入电池优化白名单可以最大程度保证通知的可靠性
-            """.trimIndent())
-            .setPositiveButton("去设置") { _, _ ->
-                BatteryOptimizationHelper.requestIgnoreBatteryOptimizations(this)
-                enableReminder()
-            }
-            .setNegativeButton("直接启用") { _, _ ->
-                enableReminder()
-            }
+            .setTitle("通知优化建议")
+            .setMessage(recommendations)
+            .setPositiveButton("我知道了", null)
             .show()
     }
 
@@ -203,14 +293,11 @@ class SettingsFragment : Fragment() {
             preferenceManager.reminderMinute
         )
         
-        val batteryOptimized = !BatteryOptimizationHelper.isIgnoringBatteryOptimizations(requireContext())
-        val message = if (batteryOptimized) {
-            "提醒已启用（建议关闭电池优化以提高可靠性）"
-        } else {
-            "提醒已启用"
-        }
+        Toast.makeText(requireContext(), "提醒已启用", Toast.LENGTH_SHORT).show()
         
-        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+        // 更新UI状态
+        updateOptimizationCardVisibility()
+        updateOptimizationStatus()
     }
 
     /**
@@ -220,6 +307,9 @@ class SettingsFragment : Fragment() {
         preferenceManager.isReminderEnabled = false
         NotificationScheduler.cancelNotification(requireContext())
         Toast.makeText(requireContext(), "提醒已关闭", Toast.LENGTH_SHORT).show()
+        
+        // 更新UI状态
+        updateOptimizationCardVisibility()
     }
 
     /**
@@ -307,6 +397,11 @@ class SettingsFragment : Fragment() {
      * 测试通知功能
      */
     private fun testNotification() {
+        if (!checkNotificationPermission()) {
+            Toast.makeText(requireContext(), "请先开启通知权限", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("测试通知")
             .setMessage("立即发送一条测试通知？")
@@ -324,8 +419,8 @@ class SettingsFragment : Fragment() {
      */
     private fun requestNotificationPermissionIfNeeded() {
         if (checkNotificationPermission()) {
-            // 已有权限，检查电池优化并启用提醒
-            checkBatteryOptimizationAndEnableReminder()
+            // 已有权限，检查其他优化并启用提醒
+            checkAllOptimizationsAndEnableReminder()
         } else {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 // Android 13+ 请求权限
@@ -339,11 +434,14 @@ class SettingsFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
-        // 页面恢复时重新检查通知权限状态
+        // 页面恢复时重新检查所有状态
         if (preferenceManager.isReminderEnabled && !checkNotificationPermission()) {
             binding.switchReminder.isChecked = false
             preferenceManager.isReminderEnabled = false
         }
+        
+        updateOptimizationStatus()
+        updateOptimizationCardVisibility()
     }
 
     override fun onDestroyView() {
