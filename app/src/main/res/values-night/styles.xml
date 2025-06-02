@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 深色模式下的工具栏样式 -->
+    <style name="ThemeOverlay.App.Toolbar.Dark" parent="ThemeOverlay.Material3.Dark.ActionBar">
+        <item name="colorSurface">?attr/colorPrimary</item>
+        <item name="colorOnSurface">@color/white</item>
+        <item name="android:textColorPrimary">@color/white</item>
+    </style>
+    
+    <!-- 深色模式下的底部导航样式 -->
+    <style name="Widget.App.BottomNavigationView" parent="Widget.Material3.BottomNavigationView">
+        <item name="materialThemeOverlay">@style/ThemeOverlay.App.BottomNavigationView</item>
+    </style>
+
+    <style name="ThemeOverlay.App.BottomNavigationView" parent="">
+        <item name="colorSurface">?attr/colorSurface</item>
+        <item name="colorOnSurface">?attr/colorOnSurface</item>
+    </style>
+</resources> 

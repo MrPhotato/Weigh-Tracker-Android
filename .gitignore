@@ -51,3 +51,5 @@ kotlin-profile/
 
 # Signing files
 release/
+
+.fake
