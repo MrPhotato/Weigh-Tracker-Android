@@ -449,24 +449,6 @@
                     android:textColor="?attr/colorOnSurfaceVariant"
                     android:soundEffectsEnabled="false" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="🔔 高优先级提醒通知，立即弹出悬浮显示"
-                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-                    android:textColor="?attr/colorPrimary"
-                    android:soundEffectsEnabled="false" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="🔇 应用界面已禁用所有音效，提供安静的使用体验"
-                    android:textAppearance="@style/TextAppearance.Material3.BodySmall"
-                    android:textColor="?attr/colorOnSurfaceVariant"
-                    android:soundEffectsEnabled="false" />
-
             </LinearLayout>
 
         </com.google.android.material.card.MaterialCardView>
